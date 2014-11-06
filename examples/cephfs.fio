@@ -1,0 +1,11 @@
+[global]
+ioengine=cephfs
+rw=randwrite
+bs=4k
+size=2g
+thread
+
+[ceph_iodepth32]
+iodepth=1
+numjobs=2
+#unlink=1

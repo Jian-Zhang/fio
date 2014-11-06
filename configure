@@ -161,6 +161,8 @@ for opt do
   ;;
   --disable-rbd) disable_rbd="yes"
   ;;
+  --disable-cephfs) disable_cephfs="yes"
+  ;;
   --disable-gfapi) disable_gfapi="yes"
   ;;
   --enable-libhdfs) libhdfs="yes"
@@ -1236,6 +1238,30 @@ echo "rbd_invalidate_cache          $rbd_inval"
 fi
 
 ##########################################
+# check for cephfs
+cephfs="no"
+cat > $TMPC << EOF
+#define _FILE_OFFSET_BITS 64
+#include <stddef.h>
+#include <cephfs/libcephfs.h>
+
+int main(int argc, char **argv)
+{
+  struct ceph_mount_info *cmount;
+
+  ceph_create(&cmount, NULL);
+  ceph_mount(cmount, NULL);
+
+  return 0;
+}
+EOF
+if test "$disable_cephfs" != "yes"  && compile_prog "" "-lcephfs" "cephfs"; then
+  LIBS="-lcephfs $LIBS"
+  cephfs="yes"
+fi
+echo "libcephfs engine              $cephfs"
+
+##########################################
 # Check whether we have setvbuf
 setvbuf="no"
 cat > $TMPC << EOF
@@ -1544,6 +1570,9 @@ if test "$rbd" = "yes" ; then
 fi
 if test "$rbd_inval" = "yes" ; then
   output_sym "CONFIG_RBD_INVAL"
+fi
+if test "$cephfs" = "yes" ; then
+  output_sym "CONFIG_CEPHFS"
 fi
 if test "$setvbuf" = "yes" ; then
   output_sym "CONFIG_SETVBUF"
